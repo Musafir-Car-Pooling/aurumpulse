@@ -20,18 +20,18 @@ export type SignalResult = {
 const ema = (v: number[], p: number) => {
   const k = 2 / (p + 1);
   const out: number[] = [];
-  v.forEach((x, i) => out.push(i === 0 ? x : x * k + out[i - 1] * (1 - k)));
+  v.forEach((x, i) => out.push(i === 0 ? x : x * k + out[i - 1]! * (1 - k)));
   return out;
 };
 const rsi = (c: number[], p = 14) => {
   let g = 0, l = 0;
   for (let i = 1; i <= p; i++) {
-    const d = c[i] - c[i - 1];
+    const d = c[i]! - c[i - 1]!;
     d > 0 ? (g += d) : (l -= d);
   }
   g /= p; l /= p;
   for (let i = p + 1; i < c.length; i++) {
-    const d = c[i] - c[i - 1];
+    const d = c[i]! - c[i - 1]!;
     g = (g * (p - 1) + Math.max(d, 0)) / p;
     l = (l * (p - 1) + Math.max(-d, 0)) / p;
   }
@@ -63,18 +63,18 @@ export const getSignal = createServerFn({ method: "POST" }).handler(async (): Pr
   ]);
   const c15 = m15.map((x) => x.c);
   const c1h = h1.map((x) => x.c);
-  const futLast = c15[c15.length - 1];
+  const futLast = c15[c15.length - 1]!;
   const spot: number = spotRes?.price ?? futLast;
   const basis = futLast - spot; // futures premium, shift levels to spot
 
   const e9 = ema(c15, 9).at(-1)!, e21 = ema(c15, 21).at(-1)!;
   const e50h = ema(c1h, 50).at(-1)!, e200h = ema(c1h, 200).at(-1)!;
   const r15 = rsi(c15), r1h = rsi(c1h);
-  const macdLine = ema(c15, 12).map((v, i) => v - ema(c15, 26)[i]);
+  const macdLine = ema(c15, 12).map((v, i) => v - ema(c15, 26)[i]!);
   const sig = ema(macdLine, 9);
   const hist = macdLine.at(-1)! - sig.at(-1)!;
   const prevHist = macdLine.at(-2)! - sig.at(-2)!;
-  const trs = m15.slice(1).map((x, i) => Math.max(x.h - x.l, Math.abs(x.h - m15[i].c), Math.abs(x.l - m15[i].c)));
+  const trs = m15.slice(1).map((x, i) => Math.max(x.h - x.l, Math.abs(x.h - m15[i]!.c), Math.abs(x.l - m15[i]!.c)));
   const atr = trs.slice(-14).reduce((a, b) => a + b, 0) / 14;
   const recent = m15.slice(-32);
   const support = Math.min(...recent.map((x) => x.l)) - basis;
