@@ -14,13 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      market_scans: {
+        Row: {
+          error: string | null
+          last_alert_direction: string | null
+          last_alert_until: string | null
+          market: string
+          result: Json | null
+          scanned_at: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          last_alert_direction?: string | null
+          last_alert_until?: string | null
+          market: string
+          result?: Json | null
+          scanned_at: string
+          status: string
+        }
+        Update: {
+          error?: string | null
+          last_alert_direction?: string | null
+          last_alert_until?: string | null
+          market?: string
+          result?: Json | null
+          scanned_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      signal_alerts: {
+        Row: {
+          created_at: string
+          direction: string
+          id: string
+          market: string
+          result: Json
+          valid_until: string
+        }
+        Insert: {
+          created_at: string
+          direction: string
+          id?: string
+          market: string
+          result: Json
+          valid_until: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          id?: string
+          market?: string
+          result?: Json
+          valid_until?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      record_market_scan: {
+        Args: {
+          p_error?: string
+          p_market: string
+          p_result: Json
+          p_scanned_at: string
+          p_status: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

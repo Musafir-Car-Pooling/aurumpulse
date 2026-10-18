@@ -1,95 +1,113 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { getSignal, type SignalResult } from "@/lib/signal.functions";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell, BellOff, RefreshCw, Radio } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getMarketBoard, getSignal, type SignalResult } from "@/lib/signal.functions";
+import { MARKETS, marketIds, price, type Market } from "@/lib/markets";
+import type { Scan } from "@/lib/market-data";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "AurumPulse — Live XAUUSD Gold Signals" },
-      { name: "description", content: "Real-time gold (XAUUSD) buy/sell signals and technical analysis for the next hour." },
-      { property: "og:title", content: "AurumPulse — Live XAUUSD Gold Signals" },
-      { property: "og:description", content: "Press Signal Now for a live gold signal with entry, stop loss and targets." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: Index,
+  head: () => ({ meta: [
+    { title: "AurumPulse — Gold, Bitcoin & Forex Signals" },
+    { name: "description", content: "Live XAUUSD, BTCUSD, EURUSD, GBPUSD and USDJPY technical signals, with entry, stop loss, targets and BUY/SELL alerts." },
+    { property: "og:title", content: "AurumPulse — Five-Market Signal Monitor" },
+    { property: "og:description", content: "Gold, Bitcoin and forex analysis with fresh BUY/SELL alerts. No alerts for WAIT." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }), component: Index,
 });
-
 const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
+type Board = Awaited<ReturnType<typeof getMarketBoard>>;
 function Index() {
-  const run = useServerFn(getSignal);
-  const [s, setS] = useState<SignalResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
+  const run = useServerFn(getSignal), readBoard = useServerFn(getMarketBoard);
+  const [market,setMarket] = useState<Market>("XAUUSD");
+  const [manual,setManual] = useState<Partial<Record<Market,Scan>>>({});
+  const [board,setBoard] = useState<Board | null>(null);
+  const [loading,setLoading] = useState<Market | null>(null);
+  const [err,setErr] = useState("");
+  const [notifying,setNotifying] = useState(false);
+  const [notice,setNotice] = useState("");
+  const [clock,setClock] = useState(0);
+  const seen = useRef<Set<string> | null>(null), notify = useRef(false);
+  const refresh = useCallback(async () => {
+    try {
+      const next = await readBoard();
+      if (seen.current) {
+        for (const alert of [...next.alerts].reverse()) {
+          if (!seen.current.has(alert.id) && new Date(alert.valid_until).getTime()>Date.now()) {
+            setNotice(`${alert.market} · ${alert.direction} · ${fmt(alert.created_at)}`);
+            if (notify.current && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              const result = alert.result as unknown as SignalResult;
+              try { new Notification(`AurumPulse · ${alert.market} ${alert.direction}`, {body:`Entry ${price(result.market,result.entry)} · TP1 ${price(result.market,result.tp1)} · TP2 ${price(result.market,result.tp2)}`,tag:alert.id}); } catch { setNotice('A new signal is available. Device notifications are not supported in this browser.'); }
+            }
+          }
+        }
+      }
+      seen.current = new Set(next.alerts.map(a => a.id));
+      setBoard(next); setErr(""); setClock(Date.now());
+    } catch { setErr("Saved market updates are unavailable. Signal Now can still check a market."); }
+  },[readBoard]);
+  useEffect(() => { void refresh(); const id = setInterval(() => {void refresh();},15000); return () => clearInterval(id); },[refresh]);
+  useEffect(() => { const id=setInterval(() => setClock(Date.now()),1000); return () => clearInterval(id); },[]);
   const go = async () => {
-    setLoading(true); setErr("");
-    try { setS(await run()); } catch { setErr("Couldn't reach the market right now. Try again in a moment."); }
-    setLoading(false);
+    const selected=market; setLoading(selected); setErr("");
+    try { const scan=await run({data:{market:selected}}); setManual(old => ({...old,[selected]:scan})); }
+    catch { setErr("Couldn't reach the market right now. Try again in a moment."); }
+    finally { setLoading(null); }
   };
-
-  const tone = s?.direction === "BUY" ? "text-bull" : s?.direction === "SELL" ? "text-bear" : "text-gold";
-
-  return (
-    <main className="min-h-screen bg-background text-foreground px-5 py-10">
-      <div className="mx-auto max-w-xl">
-        <p className="font-mono text-xs tracking-[0.3em] text-gold">XAU / USD · LIVE</p>
-        <h1 className="mt-2 font-display text-5xl leading-none">AurumPulse</h1>
-        <p className="mt-3 text-muted-foreground">Gold signal for the next hour, computed from live market data the moment you press.</p>
-
-        <button onClick={go} disabled={loading} className="btn-gold mt-8 w-full rounded-xl py-5 font-display text-2xl tracking-wide disabled:opacity-60">
-          {loading ? "Scanning market…" : "Signal Now"}
-        </button>
-        {err && <p className="mt-4 text-bear">{err}</p>}
-
-        {s && (
-          <section className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <div className="card-glow rounded-2xl p-6">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Signal · {fmt(s.time)} → {fmt(s.validUntil)}</p>
-                  <p className={`font-display text-6xl ${tone}`}>{s.direction}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Spot</p>
-                  <p className="font-mono text-2xl">${s.spot.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Confidence {s.confidence}%</p>
-                </div>
-              </div>
-              <p className="mt-4 text-sm leading-relaxed">{s.summary}</p>
-            </div>
-
-            {s.direction !== "WAIT" && (
-              <div className="grid grid-cols-2 gap-3">
-                {[["Entry", s.entry, ""], ["Stop loss", s.stopLoss, "text-bear"], ["Target 1", s.tp1, "text-bull"], ["Target 2", s.tp2, "text-bull"]].map(([k, v, c]) => (
-                  <div key={k as string} className="rounded-xl border border-border bg-card p-4">
-                    <p className="text-xs text-muted-foreground">{k}</p>
-                    <p className={`font-mono text-xl ${c}`}>${(v as number).toFixed(2)}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">Support (8h)</p><p className="font-mono text-lg">${s.support.toFixed(2)}</p></div>
-              <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">Resistance (8h)</p><p className="font-mono text-lg">${s.resistance.toFixed(2)}</p></div>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card divide-y divide-border">
-              {s.indicators.map((i) => (
-                <div key={i.name} className="flex justify-between px-4 py-3 text-sm">
-                  <span className="text-muted-foreground">{i.name}</span>
-                  <span className={`font-mono ${i.bias === "bull" ? "text-bull" : i.bias === "bear" ? "text-bear" : ""}`}>{i.value}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">Educational only, not financial advice. Prices from live gold spot and COMEX futures.</p>
-          </section>
-        )}
+  const enableNotifications = async () => {
+    if (notifying) { notify.current=false; setNotifying(false); return; }
+    if (typeof Notification === 'undefined') { setNotice('Device notifications are unavailable in this browser. New signals still appear here.'); return; }
+    const permission=await Notification.requestPermission();
+    if (permission === 'granted') {notify.current=true;setNotifying(true);setNotice('Device notifications enabled while this app is open.');}
+    else setNotice('Notifications were not enabled. New signals still appear here.');
+  };
+  const saved = board?.scans.find(row => row.market === market) as unknown as Scan | undefined;
+  const checked = manual[market];
+  const scan = checked && (!saved || checked.scanned_at > saved.scanned_at) ? checked : saved;
+  const s = scan?.result;
+  const stale = !!scan && clock>0 && clock-new Date(scan.scanned_at).getTime()>120000;
+  const expired = !!s && clock>0 && new Date(s.validUntil).getTime()<=clock;
+  const tone=s?.direction === 'BUY' ? 'text-bull' : s?.direction === 'SELL' ? 'text-bear' : 'text-gold';
+  const latest = board?.scans.reduce((time,row) => row.scanned_at>time ? row.scanned_at : time,'');
+  const running=!!latest && clock>0 && clock-new Date(latest).getTime()<120000;
+  return <main className="min-h-screen bg-background text-foreground px-5 py-10">
+    <div className="mx-auto max-w-xl">
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p>
+        <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>
       </div>
-    </main>
-  );
+      <h1 className="mt-2 font-display text-5xl leading-none">AurumPulse</h1>
+      <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5" aria-label="Markets">
+        {marketIds.map(id => <Button key={id} variant={market===id ? 'default' : 'outline'} aria-pressed={market===id} onClick={() => {setMarket(id);setNotice('');}}>{id}</Button>)}
+      </div>
+      <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><Radio className={`size-4 shrink-0 ${running ? 'text-bull' : 'text-gold'}`}/><span>{running ? `Scanning · updated ${fmt(latest ?? '')}` : 'Always-on scanner awaiting activation'}{latest && !running ? ` · last update ${fmt(latest)}` : ''}</span></div>
+      <Button onClick={go} disabled={loading!==null} className="btn-gold mt-5 h-16 w-full rounded-lg font-display text-2xl"><RefreshCw className={loading===market ? 'animate-spin motion-reduce:animate-none' : ''}/>{loading===market ? 'Scanning market…' : 'Signal Now'}</Button>
+      {err && <p role="alert" className="mt-4 text-sm text-bear">{err}</p>}
+      {notice && <div role="status" className="mt-4 border-l-2 border-gold pl-3 text-sm">{notice}</div>}
+      {scan && !s && <section className="mt-7 border-y border-border py-6"><p className="font-display text-4xl text-gold">{scan.status === 'closed' ? 'MARKET CLOSED' : scan.status === 'stale' ? 'DELAYED DATA' : 'UNAVAILABLE'}</p><p className="mt-2 text-sm text-muted-foreground">{scan.error}</p><p className="mt-2 text-xs text-muted-foreground">Checked {fmt(scan.scanned_at)}</p></section>}
+      {s && <section className="mt-7 space-y-4 animate-in fade-in slide-in-from-bottom-2">
+        <div className="card-glow rounded-lg p-5">
+          <p className="text-xs text-muted-foreground">{market} · {fmt(s.time)} → {fmt(s.validUntil)}</p>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+            <p className={`font-display text-6xl ${stale || expired ? 'text-muted-foreground' : tone}`}>{stale || expired ? 'EXPIRED' : s.direction}</p>
+            <div className="text-right"><p className="text-xs text-muted-foreground">{market==='XAUUSD' ? 'Gold quote' : 'Price'}</p><p className="font-mono text-2xl">{price(market,s.spot)}</p><p className="text-xs text-muted-foreground">Signal strength {s.confidence}%</p></div>
+          </div>
+          <p className="mt-4 text-sm leading-relaxed">{stale || expired ? 'This result is no longer current. Check again before considering a trade.' : s.summary}</p>
+          <p className="mt-3 text-xs text-muted-foreground">Market candle {fmt(s.dataTime)}{s.direction === 'WAIT' ? ' · No alert' : ''}</p>
+        </div>
+        {s.direction !== 'WAIT' && !stale && !expired && <div className="grid grid-cols-2 gap-3">{[
+          {name:'Entry',value:s.entry,color:''},{name:'Stop loss',value:s.stopLoss,color:'text-bear'},{name:'Target 1',value:s.tp1,color:'text-bull'},{name:'Target 2',value:s.tp2,color:'text-bull'},
+        ].map(item => <div key={item.name} className="rounded-lg border border-border bg-card p-4"><p className="text-xs text-muted-foreground">{item.name}</p><p className={`mt-1 break-words font-mono text-lg ${item.color}`}>{price(market,item.value)}</p></div>)}</div>}
+        <div className="grid grid-cols-2 gap-3">{[{name:'Support (32 candles)',value:s.support},{name:'Resistance (32 candles)',value:s.resistance}].map(item => <div key={item.name} className="rounded-lg border border-border bg-card p-4"><p className="text-xs text-muted-foreground">{item.name}</p><p className="mt-1 font-mono text-lg">{price(market,item.value)}</p></div>)}</div>
+        <div className="divide-y divide-border rounded-lg border border-border bg-card">{s.indicators.map(i => <div key={i.name} className="flex flex-wrap justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm"><span className="text-muted-foreground">{i.name}</span><span className={`font-mono ${i.bias==='bull' ? 'text-bull' : i.bias==='bear' ? 'text-bear' : ''}`}>{i.value}</span></div>)}</div>
+      </section>}
+      <section className="mt-8 border-t border-border pt-5">
+        <div className="flex items-center justify-between"><h2 className="font-display text-2xl">Signal alerts</h2><span className="text-xs text-muted-foreground">BUY / SELL only</span></div>
+        {!board?.alerts.length ? <p className="mt-3 text-sm text-muted-foreground">No new signals.</p> : <div className="mt-3 divide-y divide-border">{board.alerts.slice(0,8).map(alert => <Button key={alert.id} variant="ghost" className="h-auto w-full justify-between rounded-none px-0 py-3" onClick={() => setMarket(alert.market as Market)}><span className="font-mono">{alert.market} <span className={alert.direction==='BUY' ? 'text-bull' : 'text-bear'}>{alert.direction}</span></span><span className="text-xs text-muted-foreground">{fmt(alert.created_at)} · {clock>0 && new Date(alert.valid_until).getTime()<=clock ? 'Expired' : 'Active'}</span></Button>)}</div>}
+        <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm"><span>WhatsApp</span><span className="text-muted-foreground">Not connected</span></div>
+      </section>
+      <p className="mt-7 text-xs leading-relaxed text-muted-foreground">Educational only, not financial advice. Signal strength is an indicator score, not a probability of profit. Yahoo market feeds may be delayed; gold uses spot and COMEX futures. Device alerts require permission and an open app.</p>
+    </div>
+  </main>;
 }

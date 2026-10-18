@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Use the allowlisted market registry and shared pure signal engine for every instrument; this preserves the existing gold strategy while keeping quote precision market-specific.
+- Persist unattended market scans and deduplicated BUY/SELL alerts through the managed authenticated scan job and its transactional database function; browser polling only reads saved results.
+- Keep paid messaging disabled until a sender connection is approved, then implement verified durable WhatsApp callback handling before enabling sends; recipient details must never appear in public market responses.
