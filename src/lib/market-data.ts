@@ -25,7 +25,11 @@ export async function scanMarket(market: Market): Promise<Scan> {
     if (market === "XAUUSD") {
       try {
         const res = await fetch("https://api.gold-api.com/price/XAU", {signal:AbortSignal.timeout(3000)});
-        if (res.ok) { const data = z.object({price:z.number().positive()}).parse(await res.json()); spot = data.price; }
+        if (res.ok) {
+          const data = z.object({price:z.number().positive(),updatedAt:z.string()}).parse(await res.json());
+          const age = now.getTime() - new Date(data.updatedAt).getTime();
+          if (Number.isFinite(age) && age >= -60000 && age <= 5 * 60000) spot = data.price;
+        }
       } catch { /* Preserve original futures fallback when the spot feed is unavailable. */ }
     }
     return {...base, result:analyze(market,m15,h1,spot,now),status:"ready",error:null};
