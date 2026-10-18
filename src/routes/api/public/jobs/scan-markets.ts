@@ -16,7 +16,7 @@ export const Route = createFileRoute('/api/public/jobs/scan-markets')({
       await Promise.all(marketIds.slice(i,i+3).map(async market => {
         const scan = await scanMarket(market);
         const {error} = await supabaseAdmin.rpc('record_market_scan',{
-          p_market:market,p_result:scan.result as unknown as Json,p_status:scan.status,p_scanned_at:scan.scanned_at,p_error:scan.error ?? undefined,
+          p_market:market,p_result:scan.result as unknown as Json,p_status:scan.status,p_scanned_at:scan.scanned_at,...(scan.error ? {p_error:scan.error} : {}),
         });
         if(error) throw error;
       }));

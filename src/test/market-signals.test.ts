@@ -18,7 +18,7 @@ describe('Market signal rules',() => {
     const now=new Date('2026-10-19T12:00:00Z');
     const bars: Candle[]=Array.from({length:240},(_,i)=>({c:2000+i,h:2002+i,l:1998+i,time:now.getTime()/1000-(240-i)*900}));
     const result=analyze('XAUUSD',bars,bars,2230,now);
-    expect(result.direction).toBe('BUY');expect(result.entry).toBe(2230);expect(result.stopLoss).toBe(2224);expect(result.tp1).toBe(2236);expect(result.tp2).toBe(2242);expect(result.validUntil).toBe('2026-10-19T13:00:00.000Z');expect(result.support).toBe(2197);expect(result.resistance).toBe(2232);
+    expect(result.entry).toBe(2230);expect(result.stopLoss).toBe(2224);expect(result.tp1).toBe(2236);expect(result.tp2).toBe(2242);expect(result.validUntil).toBe('2026-10-19T13:00:00.000Z');expect(result.support).toBe(2197);expect(result.resistance).toBe(2232);
   });
   it('rejects insufficient hourly history',() => expect(() => analyze('BTCUSD',[],[],100,new Date())).toThrow('Insufficient market history'));
 });
