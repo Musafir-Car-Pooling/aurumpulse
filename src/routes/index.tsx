@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/useAuth";
+import { getMyAccess } from "@/lib/billing.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, BellOff, RefreshCw, Radio } from "lucide-react";
@@ -19,7 +22,11 @@ export const Route = createFileRoute("/")({
 const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 type Board = Awaited<ReturnType<typeof getMarketBoard>>;
 function Index() {
-  const run = useServerFn(getSignal), readBoard = useServerFn(getMarketBoard);
+  const run = useServerFn(getSignal), readBoard = useServerFn(getMarketBoard), readAccess = useServerFn(getMyAccess);
+  const { user, ready } = useAuth();
+  const [access,setAccess] = useState<Awaited<ReturnType<typeof getMyAccess>> | null>(null);
+  useEffect(() => { if (!user) { setAccess(null); return; } readAccess().then(setAccess).catch(() => setAccess(null)); },[user,readAccess]);
+  const allowed = access?.state.kind === 'trial' || access?.state.kind === 'premium';
   const [market,setMarket] = useState<Market>("XAUUSD");
   const [manual,setManual] = useState<Partial<Record<Market,Scan>>>({});
   const [board,setBoard] = useState<Board | null>(null);
@@ -47,12 +54,12 @@ function Index() {
       setBoard(next); setErr(""); setClock(Date.now());
     } catch { setErr("Saved market updates are unavailable. Signal Now can still check a market."); }
   },[readBoard]);
-  useEffect(() => { void refresh(); const id = setInterval(() => {void refresh();},15000); return () => clearInterval(id); },[refresh]);
+  useEffect(() => { if (!allowed) return; void refresh(); const id = setInterval(() => {void refresh();},15000); return () => clearInterval(id); },[refresh,allowed]);
   useEffect(() => { const id=setInterval(() => setClock(Date.now()),1000); return () => clearInterval(id); },[]);
   const go = async () => {
     const selected=market; setLoading(selected); setErr("");
     try { const scan=await run({data:{market:selected}}); setManual(old => ({...old,[selected]:scan})); }
-    catch { setErr("Couldn't reach the market right now. Try again in a moment."); }
+    catch (e) { setErr(e instanceof Error && e.message.includes('PREMIUM_REQUIRED') ? "Your access has ended. Choose a premium package." : "Couldn't reach the market right now. Try again in a moment."); }
     finally { setLoading(null); }
   };
   const enableNotifications = async () => {
@@ -78,6 +85,10 @@ function Index() {
         <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>
       </div>
       <h1 className="mt-2 font-display text-5xl leading-none">AurumPulse</h1>
+      {ready && !user && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">3 DAYS FREE</p><p className="mt-2 text-sm">Create an account to get live BUY/SELL signals for 5 markets. After the trial: Daily $1, Weekly $5 or Monthly $15.</p><Button asChild className="btn-gold mt-4 w-full"><Link to="/auth">Start free trial</Link></Button></section>}
+      {user && access && !allowed && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">TRIAL ENDED</p><p className="mt-2 text-sm">Your 3-day free trial has expired. Get a premium package to keep receiving signals.</p><Button asChild className="btn-gold mt-4 w-full"><Link to="/packages">See packages — from $1</Link></Button></section>}
+      {user && access && allowed && <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{access.state.kind === 'trial' ? `Free trial · ends ${new Date(access.state.until).toLocaleDateString()}` : access.isAdmin ? 'Admin' : `Premium · until ${new Date((access.state as {until:string}).until).toLocaleDateString()}`}</span><span className="flex gap-3"><Link to="/packages" className="text-gold underline">Packages</Link><button className="underline" onClick={() => void supabase.auth.signOut()}>Sign out</button></span></div>}
+      {allowed && <>
       <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5" aria-label="Markets">
         {marketIds.map(id => <Button key={id} variant={market===id ? 'default' : 'outline'} aria-pressed={market===id} onClick={() => {setMarket(id);setNotice('');}}>{id}</Button>)}
       </div>
@@ -107,6 +118,7 @@ function Index() {
         {!board?.alerts.length ? <p className="mt-3 text-sm text-muted-foreground">No new signals.</p> : <div className="mt-3 divide-y divide-border">{board.alerts.slice(0,8).map(alert => <Button key={alert.id} variant="ghost" className="h-auto w-full justify-between rounded-none px-0 py-3" onClick={() => setMarket(alert.market as Market)}><span className="font-mono">{alert.market} <span className={alert.direction==='BUY' ? 'text-bull' : 'text-bear'}>{alert.direction}</span></span><span className="text-xs text-muted-foreground">{fmt(alert.created_at)} · {clock>0 && new Date(alert.valid_until).getTime()<=clock ? 'Expired' : 'Active'}</span></Button>)}</div>}
         <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm"><span>WhatsApp</span><span className="text-muted-foreground">Not connected</span></div>
       </section>
+      </>}
       <p className="mt-7 text-xs leading-relaxed text-muted-foreground">Educational only, not financial advice. Signal strength is an indicator score, not a probability of profit. Yahoo market feeds may be delayed; gold uses spot and COMEX futures. Device alerts require permission and an open app.</p>
     </div>
   </main>;

@@ -44,6 +44,54 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          decided_at: string | null
+          email: string | null
+          id: string
+          manual_channel: string | null
+          method: string
+          plan: string
+          proof_path: string | null
+          provider_payment_id: string | null
+          reference: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          decided_at?: string | null
+          email?: string | null
+          id?: string
+          manual_channel?: string | null
+          method: string
+          plan: string
+          proof_path?: string | null
+          provider_payment_id?: string | null
+          reference?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          decided_at?: string | null
+          email?: string | null
+          id?: string
+          manual_channel?: string | null
+          method?: string
+          plan?: string
+          proof_path?: string | null
+          provider_payment_id?: string | null
+          reference?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       signal_alerts: {
         Row: {
           created_at: string
@@ -71,11 +119,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_access: {
+        Row: {
+          created_at: string
+          email: string | null
+          plan: string | null
+          premium_until: string | null
+          trial_ends_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          plan?: string | null
+          premium_until?: string | null
+          trial_ends_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          plan?: string | null
+          premium_until?: string | null
+          trial_ends_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      activate_payment: { Args: { p_id: string }; Returns: undefined }
+      admin_decide_payment: {
+        Args: { p_approve: boolean; p_id: string }
+        Returns: undefined
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_signal_access: { Args: { _user_id: string }; Returns: boolean }
       record_market_scan: {
         Args: {
           p_error?: string
@@ -88,7 +194,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -215,6 +321,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
