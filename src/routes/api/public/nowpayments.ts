@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/nowpayments")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env.NOWPAYMENTS_IPN_SECRET;
+        const secret = process.env['NOWPAYMENTS_IPN_SECRET'];
         if (!secret) return new Response("Not configured", { status: 503 });
         const raw = await request.text();
         let body: Record<string, unknown>;
@@ -35,12 +35,12 @@ export const Route = createFileRoute("/api/public/nowpayments")({
         const expected = await hmacSha512(secret, JSON.stringify(sortKeys(body)));
         const given = (request.headers.get("x-nowpayments-sig") ?? "").toLowerCase();
         if (!safeEqual(expected, given)) return new Response("Invalid signature", { status: 401 });
-        const orderId = String(body.order_id ?? "");
-        const status = String(body.payment_status ?? "");
+        const orderId = String(body['order_id'] ?? "");
+        const status = String(body['payment_status'] ?? "");
         if (status === "finished" && /^[0-9a-f-]{36}$/i.test(orderId)) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: row } = await supabaseAdmin.from("payment_requests").select("id,method,amount_usd").eq("id", orderId).maybeSingle();
-          const paid = Number(body.price_amount ?? 0);
+          const paid = Number(body['price_amount'] ?? 0);
           if (row && row.method === "crypto" && paid >= Number(row.amount_usd)) {
             const { error } = await supabaseAdmin.rpc("activate_payment", { p_id: orderId });
             if (error) return new Response("Retry", { status: 500 });

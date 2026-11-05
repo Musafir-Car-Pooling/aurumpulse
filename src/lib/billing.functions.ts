@@ -42,7 +42,7 @@ export const createCryptoInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ plan: planSchema }).parse(input))
   .handler(async ({ data, context }) => {
-    const apiKey = process.env.NOWPAYMENTS_API_KEY;
+    const apiKey = process.env['NOWPAYMENTS_API_KEY'];
     if (!apiKey) throw new Error("Crypto payments are not set up yet");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin.from("payment_requests").insert({
