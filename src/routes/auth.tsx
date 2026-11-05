@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
+import { Eye, EyeOff, Lock, Mail, ShieldCheck, TrendingUp, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [
@@ -22,6 +23,7 @@ function AuthPage() {
   const { user, ready } = useAuth();
   const [mode, setMode] = useState<"in" | "up">("up");
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
   useEffect(() => { if (ready && user) void nav({ to: "/" }); }, [ready, user, nav]);
 
@@ -39,20 +41,36 @@ function AuthPage() {
     if (r.error) setMsg("Google sign-in failed. Try again.");
   };
 
-  return <main className="min-h-screen bg-background px-5 py-12 text-foreground">
-    <div className="mx-auto max-w-sm">
-      <h1 className="font-display text-5xl">AurumPulse</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{mode === "up" ? "Create an account — first 3 days of signals are free." : "Welcome back."}</p>
-      <Button variant="outline" className="mt-6 w-full" onClick={google}>Continue with Google</Button>
-      <form onSubmit={submit} className="mt-4 space-y-3">
-        <Input type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} aria-label="Email" />
-        <Input type="password" required minLength={8} placeholder="Password (8+ chars, letters, numbers, symbol)" value={password} onChange={e => setPassword(e.target.value)} aria-label="Password" />
-        <Button type="submit" disabled={busy} className="btn-gold w-full">{mode === "up" ? "Start free trial" : "Sign in"}</Button>
-      </form>
-      {msg && <p role="status" className="mt-3 rounded-md border border-gold/40 p-3 text-sm">{msg}</p>}
-      <button className="mt-4 text-sm text-gold underline" onClick={() => { setMode(mode === "up" ? "in" : "up"); setMsg(""); }}>
-        {mode === "up" ? "Already have an account? Sign in" : "New here? Start free trial"}
-      </button>
+  return <main className="relative min-h-screen overflow-hidden bg-background px-5 py-10 text-foreground">
+    <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-gold/20 blur-3xl" />
+    <div className="relative mx-auto max-w-sm">
+      <div className="flex items-center gap-3">
+        <div className="btn-gold flex h-12 w-12 items-center justify-center rounded-xl"><TrendingUp className="h-6 w-6" /></div>
+        <div><h1 className="font-display text-4xl leading-none">AURUMPULSE</h1><p className="text-xs tracking-widest text-gold">LIVE MARKET SIGNALS</p></div>
+      </div>
+      <div className="card-glow mt-8 rounded-2xl border border-gold/20 bg-card/80 p-6 backdrop-blur">
+        <div className="grid grid-cols-2 rounded-xl bg-muted p-1 text-sm">
+          {(["up", "in"] as const).map(m => <button key={m} type="button" onClick={() => { setMode(m); setMsg(""); }} className={`h-10 rounded-lg font-medium transition ${mode === m ? "btn-gold" : "text-muted-foreground"}`}>{m === "up" ? "Sign up" : "Sign in"}</button>)}
+        </div>
+        <h2 className="mt-6 text-2xl font-semibold">{mode === "up" ? "Start your free trial" : "Welcome back"}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{mode === "up" ? "3 days of free BUY/SELL signals on 5 markets." : "Sign in to see your live signals."}</p>
+        <Button variant="outline" className="mt-6 h-14 w-full rounded-xl text-base" onClick={google}>Continue with Google</Button>
+        <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />OR<span className="h-px flex-1 bg-border" /></div>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="relative"><Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input type="email" required placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} aria-label="Email" className="h-14 rounded-xl pl-12 text-base" /></div>
+          <div className="relative"><Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input type={show ? "text" : "password"} required minLength={8} placeholder="Password (8+ characters)" value={password} onChange={e => setPassword(e.target.value)} aria-label="Password" className="h-14 rounded-xl pl-12 pr-12 text-base" />
+            <button type="button" onClick={() => setShow(!show)} aria-label={show ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-gold">{show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></div>
+          <Button type="submit" disabled={busy} className="btn-gold h-14 w-full rounded-xl text-base font-semibold">{busy ? "Please wait…" : mode === "up" ? "Start free trial" : "Sign in"}</Button>
+        </form>
+        {msg && <p role="status" className="mt-4 rounded-xl border border-gold/40 bg-muted p-3 text-sm">{msg}</p>}
+      </div>
+      <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
+        <div><ShieldCheck className="mx-auto mb-1 h-5 w-5 text-gold" />Secure</div>
+        <div><Zap className="mx-auto mb-1 h-5 w-5 text-gold" />Real-time</div>
+        <div><TrendingUp className="mx-auto mb-1 h-5 w-5 text-gold" />5 markets</div>
+      </div>
     </div>
   </main>;
 }
