@@ -8,6 +8,13 @@
       "when": 1792351535776,
       "tag": "0000_market_scans_and_signal_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793914128861,
+      "tag": "0001_premium_access_and_payments",
+      "breakpoints": true
     }
   ]
 }
