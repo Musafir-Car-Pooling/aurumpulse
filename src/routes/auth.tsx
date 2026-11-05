@@ -31,7 +31,7 @@ function AuthPage() {
       ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } })
       : await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) setMsg(error.message);
+    if (error) setMsg(/weak|easy to guess|pwned/i.test(error.message) ? "This password is too common. Use a stronger one (8+ characters with letters, numbers and a symbol)." : /already registered/i.test(error.message) ? "This email already has an account — tap Sign in below." : /not confirmed/i.test(error.message) ? "Please confirm your email first (check inbox/spam), then sign in." : error.message);
     else if (mode === "up") setMsg("Check your email to confirm your account, then sign in.");
   };
   const google = async () => {
@@ -46,10 +46,10 @@ function AuthPage() {
       <Button variant="outline" className="mt-6 w-full" onClick={google}>Continue with Google</Button>
       <form onSubmit={submit} className="mt-4 space-y-3">
         <Input type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} aria-label="Email" />
-        <Input type="password" required minLength={6} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} aria-label="Password" />
+        <Input type="password" required minLength={8} placeholder="Password (8+ chars, letters, numbers, symbol)" value={password} onChange={e => setPassword(e.target.value)} aria-label="Password" />
         <Button type="submit" disabled={busy} className="btn-gold w-full">{mode === "up" ? "Start free trial" : "Sign in"}</Button>
       </form>
-      {msg && <p role="status" className="mt-3 text-sm">{msg}</p>}
+      {msg && <p role="status" className="mt-3 rounded-md border border-gold/40 p-3 text-sm">{msg}</p>}
       <button className="mt-4 text-sm text-gold underline" onClick={() => { setMode(mode === "up" ? "in" : "up"); setMsg(""); }}>
         {mode === "up" ? "Already have an account? Sign in" : "New here? Start free trial"}
       </button>
