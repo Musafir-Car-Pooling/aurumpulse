@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          active: boolean
+          created_at: string
+          details: string
+          id: string
+          label: string
+          sort: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          details: string
+          id?: string
+          label: string
+          sort?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          details?: string
+          id?: string
+          label?: string
+          sort?: number
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           amount_usd: number
@@ -173,6 +200,18 @@ export type Database = {
       admin_decide_payment: {
         Args: { p_approve: boolean; p_id: string }
         Returns: undefined
+      }
+      admin_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          is_admin: boolean
+          plan: string
+          premium_until: string
+          trial_ends_at: string
+          user_id: string
+        }[]
       }
       has_role: {
         Args: {

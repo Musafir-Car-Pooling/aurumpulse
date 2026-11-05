@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { getMyAccess } from "@/lib/billing.functions";
-import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, BellOff, RefreshCw, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppMenu, statusLabel } from "@/components/AppMenu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getMarketBoard, getSignal, type SignalResult } from "@/lib/signal.functions";
 import { PLANS, planIds } from "@/lib/plans";
 import { MARKETS, marketIds, price, type Market } from "@/lib/markets";
@@ -36,6 +37,12 @@ function Index() {
   const [notifying,setNotifying] = useState(false);
   const [notice,setNotice] = useState("");
   const [clock,setClock] = useState(0);
+  const [ask,setAsk] = useState(false);
+  useEffect(() => {
+    if (!user || typeof Notification === 'undefined') return;
+    if (Notification.permission === 'granted') { notify.current = true; setNotifying(true); return; }
+    if (Notification.permission === 'default' && !sessionStorage.getItem('ap-notif-asked')) setAsk(true);
+  },[user]);
   const seen = useRef<Set<string> | null>(null), notify = useRef(false);
   const refresh = useCallback(async () => {
     try {
@@ -82,13 +89,13 @@ function Index() {
   return <main className="min-h-screen bg-background text-foreground px-5 py-10">
     <div className="mx-auto max-w-xl">
       <div className="flex items-center justify-between gap-3">
-        <p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p>
-        <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>
+        <div className="flex items-center gap-1">{user && <AppMenu email={user.email ?? ''} isAdmin={!!access?.isAdmin} status={statusLabel(access?.state.kind, !!access?.isAdmin, (access?.state as {until?:string}|undefined)?.until)} />}<p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p></div>
+        {user && <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>}
       </div>
       <h1 className="mt-2 font-display text-5xl leading-none">AurumPulse</h1>
       {ready && !user && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">3 DAYS FREE</p><p className="mt-2 text-sm">Create an account to get live BUY/SELL signals for 5 markets. After the trial, pick a package:</p><div className="mt-4 grid grid-cols-3 gap-2">{planIds.map(id => <Link key={id} to="/packages" className="rounded-lg border border-gold/40 bg-card p-3 text-center hover:border-gold"><p className="text-xs text-muted-foreground">{PLANS[id].label}</p><p className="font-display text-3xl text-gold">${PLANS[id].price}</p><p className="text-[10px] text-muted-foreground">{PLANS[id].days} {PLANS[id].days === 1 ? "day" : "days"}</p></Link>)}</div><Button asChild className="btn-gold mt-4 w-full"><Link to="/auth">Start free trial</Link></Button></section>}
       {user && access && !allowed && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">TRIAL ENDED</p><p className="mt-2 text-sm">Your 3-day free trial has expired. Get a premium package to keep receiving signals.</p><div className="mt-4 grid grid-cols-3 gap-2">{planIds.map(id => <Link key={id} to="/packages" className="rounded-lg border border-gold/40 bg-card p-3 text-center hover:border-gold"><p className="text-xs text-muted-foreground">{PLANS[id].label}</p><p className="font-display text-3xl text-gold">${PLANS[id].price}</p><p className="text-[10px] text-muted-foreground">{PLANS[id].days} {PLANS[id].days === 1 ? "day" : "days"}</p></Link>)}</div><Button asChild className="btn-gold mt-4 w-full"><Link to="/packages">See packages — from $1</Link></Button></section>}
-      {user && access && allowed && <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{access.state.kind === 'trial' ? `Free trial · ends ${new Date(access.state.until).toLocaleDateString()}` : access.isAdmin ? 'Admin' : `Premium · until ${new Date((access.state as {until:string}).until).toLocaleDateString()}`}</span><span className="flex gap-3"><Link to="/packages" className="text-gold underline">Packages</Link><button className="underline" onClick={() => void supabase.auth.signOut()}>Sign out</button></span></div>}
+      {user && access && allowed && <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{access.state.kind === 'trial' ? `Free trial · ends ${new Date(access.state.until).toLocaleDateString()}` : access.isAdmin ? 'Admin' : `Premium · until ${new Date((access.state as {until:string}).until).toLocaleDateString()}`}</span><Link to="/packages" className="text-gold underline">Packages</Link></div>}
       {allowed && <>
       <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5" aria-label="Markets">
         {marketIds.map(id => <Button key={id} variant={market===id ? 'default' : 'outline'} aria-pressed={market===id} onClick={() => {setMarket(id);setNotice('');}}>{id}</Button>)}
@@ -120,6 +127,14 @@ function Index() {
         <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm"><span>WhatsApp</span><span className="text-muted-foreground">Not connected</span></div>
       </section>
       </>}
+      <AlertDialog open={ask} onOpenChange={o => { if (!o) { sessionStorage.setItem('ap-notif-asked','1'); setAsk(false); } }}>
+        <AlertDialogContent className="border-gold/30">
+          <AlertDialogHeader><div className="btn-gold mx-auto flex h-14 w-14 items-center justify-center rounded-full"><Bell className="h-7 w-7"/></div>
+            <AlertDialogTitle className="text-center font-display text-3xl">Get signal alerts?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">Do you want BUY/SELL signals as automatic notifications? Tap Yes, then choose Allow.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Not now</AlertDialogCancel><AlertDialogAction className="btn-gold" onClick={() => { sessionStorage.setItem('ap-notif-asked','1'); void enableNotifications(); }}>Yes, notify me</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <p className="mt-7 text-xs leading-relaxed text-muted-foreground">Educational only, not financial advice. Signal strength is an indicator score, not a probability of profit. Yahoo market feeds may be delayed; gold uses spot and COMEX futures. Device alerts require permission and an open app.</p>
     </div>
   </main>;

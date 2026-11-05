@@ -15,6 +15,13 @@
       "when": 1793914128861,
       "tag": "0001_premium_access_and_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793916908245,
+      "tag": "0002_payment_methods_admin_users",
+      "breakpoints": true
     }
   ]
 }

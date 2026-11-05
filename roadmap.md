@@ -8,5 +8,5 @@
 - [ ] Activate unattended production scanning — waiting for the user to request publishing the new scanner.
 - [ ] Connect WhatsApp and implement/test sending, signed callbacks, delivery tracking and recovery — connection declined; approved sender/template and publishing required.- [x] 3-day free trial, Daily/Weekly/Monthly packages, signals locked after trial, manual payment review and crypto checkout.
 - [ ] Crypto payments live — waiting for the user's NOWPayments API key and IPN secret.
-- [ ] Real Easypaisa/JazzCash/bank/Binance details on the packages page — waiting for the user.
-- [ ] Admin access — waiting for the user to sign up so their account can be made admin.
+- [x] Binance address added; admin can add/update manual methods.
+- [ ] Admin access for pp@gmail.com — waiting for that account to be signed up and email confirmed.

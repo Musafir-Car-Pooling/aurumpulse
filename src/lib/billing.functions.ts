@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { accessState, PLANS, planIds, MANUAL_CHANNELS, type PlanId } from "./plans";
+import { accessState, PLANS, planIds, type PlanId } from "./plans";
 
 const planSchema = z.enum(planIds as [PlanId, ...PlanId[]]);
 
@@ -22,7 +22,7 @@ export const submitManualPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
     plan: planSchema,
-    channel: z.enum(MANUAL_CHANNELS.map(c => c.id) as [string, ...string[]]),
+    channel: z.string().trim().min(1).max(80),
     reference: z.string().trim().min(3).max(120),
     proofPath: z.string().max(300),
   }).parse(input))
@@ -89,4 +89,41 @@ export const adminDecidePayment = createServerFn({ method: "POST" })
     const { error } = await context.supabase.rpc("admin_decide_payment", { p_id: data.id, p_approve: data.approve });
     if (error) throw new Error("Could not update payment");
     return { ok: true };
+  });
+
+export const listPaymentMethods = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.from("payment_methods").select("id,label,details,active,sort").order("sort").order("created_at");
+    return data ?? [];
+  });
+
+export const adminSaveMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    id: z.string().uuid().optional(), label: z.string().trim().min(2).max(60),
+    details: z.string().trim().min(3).max(300), active: z.boolean(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { id, ...row } = data;
+    const { error } = id ? await context.supabase.from("payment_methods").update(row).eq("id", id) : await context.supabase.from("payment_methods").insert(row);
+    if (error) throw new Error("Could not save method");
+    return { ok: true };
+  });
+
+export const adminDeleteMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("payment_methods").delete().eq("id", data.id);
+    if (error) throw new Error("Could not delete method");
+    return { ok: true };
+  });
+
+export const adminListUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("admin_list_users");
+    if (error) throw new Error("Not allowed");
+    return data ?? [];
   });
