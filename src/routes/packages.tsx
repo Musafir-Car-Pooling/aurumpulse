@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { createCryptoInvoice, getMyAccess, submitManualPayment } from "@/lib/billing.functions";
-import { MANUAL_CHANNELS, PLANS, planIds, type ChannelId, type PlanId } from "@/lib/plans";
+import { createCryptoInvoice, getMyAccess, listPaymentMethods, submitManualPayment } from "@/lib/billing.functions";
+import { PLANS, planIds, type PlanId } from "@/lib/plans";
+import { Copy } from "lucide-react";
+import { AppMenu, statusLabel } from "@/components/AppMenu";
 
 export const Route = createFileRoute("/packages")({
   head: () => ({ meta: [
@@ -27,11 +29,13 @@ function Packages() {
   const readAccess = useServerFn(getMyAccess), crypto = useServerFn(createCryptoInvoice), manual = useServerFn(submitManualPayment);
   const [access, setAccess] = useState<Access | null>(null);
   const [plan, setPlan] = useState<PlanId>("weekly");
-  const [method, setMethod] = useState<"crypto" | "manual">("crypto");
-  const [channel, setChannel] = useState<ChannelId>("easypaisa");
+  const [method, setMethod] = useState<"crypto" | "manual">("manual");
+  const readMethods = useServerFn(listPaymentMethods);
+  const [methods, setMethods] = useState<Awaited<ReturnType<typeof listPaymentMethods>>>([]);
+  const [channel, setChannel] = useState("");
   const [reference, setReference] = useState(""), [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false), [msg, setMsg] = useState("");
-  const load = useCallback(async () => { try { setAccess(await readAccess()); } catch { /* signed out */ } }, [readAccess]);
+  const load = useCallback(async () => { try { setAccess(await readAccess()); const m = await readMethods(); setMethods(m); setChannel(c => c || m[0]?.id || ""); } catch { /* signed out */ } }, [readAccess, readMethods]);
   useEffect(() => { if (ready && !user) void nav({ to: "/auth" }); if (user) void load(); }, [ready, user, nav, load]);
 
   const payCrypto = async () => {
@@ -45,16 +49,17 @@ function Packages() {
     const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
     const up = await supabase.storage.from("payment-proofs").upload(path, file);
     if (up.error) { setMsg("Upload failed. Use an image under 5 MB."); setBusy(false); return; }
-    try { await manual({ data: { plan, channel, reference, proofPath: path } }); setMsg("Payment sent for review. Your package starts once approved."); setReference(""); setFile(null); void load(); }
+    if (!ch) { setMsg("Choose a payment method."); setBusy(false); return; }
+    try { await manual({ data: { plan, channel: ch.label, reference, proofPath: path } }); setMsg("Payment sent for review. Your package starts once approved."); setReference(""); setFile(null); void load(); }
     catch { setMsg("Could not submit payment. Try again."); }
     setBusy(false);
   };
   const st = access?.state;
-  const ch = MANUAL_CHANNELS.find(c => c.id === channel)!;
+  const ch = methods.find(c => c.id === channel);
 
   return <main className="min-h-screen bg-background px-5 py-10 text-foreground">
     <div className="mx-auto max-w-xl">
-      <Link to="/" className="text-xs text-gold">← Back to signals</Link>
+      <div className="flex items-center gap-2">{user && <AppMenu email={user.email ?? ""} isAdmin={!!access?.isAdmin} status={statusLabel(access?.state.kind, !!access?.isAdmin, (access?.state as { until?: string } | undefined)?.until)} />}<Link to="/" className="text-xs text-gold">← Back to signals</Link></div>
       <h1 className="mt-2 font-display text-5xl">Premium</h1>
       {st && <p className="mt-2 text-sm text-muted-foreground">
         {st.kind === "trial" ? `Free trial active until ${day(st.until)}.` : st.kind === "premium" ? `Premium active until ${day(st.until)}.` : "Your free trial has ended. Choose a package to keep getting signals."}
@@ -69,14 +74,17 @@ function Packages() {
       </div>
       <div className="mt-6 grid grid-cols-2 gap-2">
         <Button variant={method === "crypto" ? "default" : "outline"} onClick={() => setMethod("crypto")}>Crypto (USDT, BTC…)</Button>
-        <Button variant={method === "manual" ? "default" : "outline"} onClick={() => setMethod("manual")}>Easypaisa / Bank</Button>
+        <Button variant={method === "manual" ? "default" : "outline"} onClick={() => setMethod("manual")}>Binance / Manual</Button>
       </div>
       {method === "crypto" ? <div className="mt-5">
         <p className="text-sm text-muted-foreground">Pay from anywhere in the world. Your package activates automatically once the payment confirms.</p>
         <Button disabled={busy} onClick={payCrypto} className="btn-gold mt-4 h-14 w-full font-display text-2xl">Pay ${PLANS[plan].price} with crypto</Button>
       </div> : <form onSubmit={payManual} className="mt-5 space-y-3">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{MANUAL_CHANNELS.map(c => <Button type="button" key={c.id} size="sm" variant={channel === c.id ? "default" : "outline"} onClick={() => setChannel(c.id)}>{c.label}</Button>)}</div>
-        <div className="rounded-lg border border-border bg-card p-4 text-sm"><p className="text-muted-foreground">Send ${PLANS[plan].price} to {ch.label}</p><p className="mt-1 font-mono">{ch.details}</p></div>
+        {methods.length > 1 && <div className="grid grid-cols-2 gap-2">{methods.map(c => <Button type="button" key={c.id} size="sm" variant={channel === c.id ? "default" : "outline"} onClick={() => setChannel(c.id)}>{c.label}</Button>)}</div>}
+        {ch ? <div className="card-glow rounded-xl p-4 text-sm"><p className="text-muted-foreground">Step 1 · Send <b className="text-gold">${PLANS[plan].price}</b> via {ch.label}</p>
+          <div className="mt-2 flex items-center gap-2 rounded-lg bg-muted p-3"><p className="flex-1 break-all font-mono text-xs">{ch.details}</p><Button type="button" size="icon" variant="ghost" aria-label="Copy" onClick={() => { void navigator.clipboard.writeText(ch.details); setMsg("Copied."); }}><Copy className="h-4 w-4" /></Button></div>
+          <p className="mt-3 text-xs text-muted-foreground">Step 2 · Upload the payment screenshot below. Your package activates after admin approval.</p></div>
+          : <p className="text-sm text-muted-foreground">No payment methods available yet.</p>}
         <Input required placeholder="Transaction ID / reference" value={reference} onChange={e => setReference(e.target.value)} aria-label="Transaction reference" />
         <Input required type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} aria-label="Payment screenshot" />
         <Button type="submit" disabled={busy} className="btn-gold h-12 w-full">Submit payment for review</Button>
