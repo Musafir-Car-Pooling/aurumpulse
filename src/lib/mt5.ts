@@ -15,6 +15,15 @@ export function canTrade(s: { direction: string; validUntil: string } | null | u
   return !!s && (s.direction === "BUY" || s.direction === "SELL") && new Date(s.validUntil).getTime() > now;
 }
 
+type OrderRow = { id: string; market: string; direction: string; lot: number; signal: unknown };
+export function pollLine(o: OrderRow, withLevels: boolean) {
+  const base = `${o.id}|${o.market}|${o.direction}|${o.lot}`;
+  if (!withLevels) return base;
+  const s = (o.signal ?? {}) as Record<string, unknown>;
+  const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+  return `${base}|${n(s.stopLoss)}|${n(s.tp1)}|${n(s.tp2)}`;
+}
+
 export function isStale(createdAt: string, now = Date.now()) {
   return now - new Date(createdAt).getTime() > ORDER_MAX_AGE_MS;
 }

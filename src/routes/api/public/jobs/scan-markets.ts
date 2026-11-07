@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { marketIds } from "@/lib/markets";
 import { scanMarket } from "@/lib/market-data";
+import { canTrade } from "@/lib/mt5";
 import type { Json } from "@/integrations/supabase/types";
 export const Route = createFileRoute('/api/public/jobs/scan-markets')({
   server:{handlers:{POST:async ({request}) => {
@@ -19,6 +20,12 @@ export const Route = createFileRoute('/api/public/jobs/scan-markets')({
           p_market:market,p_result:scan.result as unknown as Json,p_status:scan.status,p_scanned_at:scan.scanned_at,...(scan.error ? {p_error:scan.error} : {}),
         });
         if(error) throw error;
+        const s = scan.result;
+        if (scan.status === 'ok' && canTrade(s) && s) {
+          const {error:qErr} = await supabaseAdmin.rpc('queue_auto_orders',{p_market:market,p_direction:s.direction,
+            p_signal:{entry:s.entry,stopLoss:s.stopLoss,tp1:s.tp1,tp2:s.tp2,time:s.time,validUntil:s.validUntil} as unknown as Json});
+          if(qErr) console.error('auto-trade queue failed',market,qErr.message);
+        }
       }));
     }
     return Response.json({ok:true});
