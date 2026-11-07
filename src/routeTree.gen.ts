@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as Mt5RouteImport } from './routes/mt5'
 import { Route as PackagesRouteImport } from './routes/packages'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ApiPublicNowpaymentsRouteImport } from './routes/api/public/nowpayments'
 import { Route as ApiPublicJobsScanMarketsRouteImport } from './routes/api/public/jobs/scan-markets'
 import { Route as ApiPublicMt5PollRouteImport } from './routes/api/public/mt5/poll'
@@ -44,6 +45,11 @@ const PackagesRoute = PackagesRouteImport.update({
   path: '/packages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicNowpaymentsRoute = ApiPublicNowpaymentsRouteImport.update({
   id: '/api/public/nowpayments',
   path: '/api/public/nowpayments',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/mt5': typeof Mt5Route
   '/packages': typeof PackagesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
   '/api/public/mt5/poll': typeof ApiPublicMt5PollRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/mt5': typeof Mt5Route
   '/packages': typeof PackagesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
   '/api/public/mt5/poll': typeof ApiPublicMt5PollRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/mt5': typeof Mt5Route
   '/packages': typeof PackagesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
   '/api/public/mt5/poll': typeof ApiPublicMt5PollRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/mt5'
     | '/packages'
+    | '/reset-password'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
     | '/api/public/mt5/poll'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/mt5'
     | '/packages'
+    | '/reset-password'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
     | '/api/public/mt5/poll'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/mt5'
     | '/packages'
+    | '/reset-password'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
     | '/api/public/mt5/poll'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   Mt5Route: typeof Mt5Route
   PackagesRoute: typeof PackagesRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicNowpaymentsRoute: typeof ApiPublicNowpaymentsRoute
   ApiPublicJobsScanMarketsRoute: typeof ApiPublicJobsScanMarketsRoute
   ApiPublicMt5PollRoute: typeof ApiPublicMt5PollRoute
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PackagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/nowpayments': {
       id: '/api/public/nowpayments'
       path: '/api/public/nowpayments'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   Mt5Route: Mt5Route,
   PackagesRoute: PackagesRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicNowpaymentsRoute: ApiPublicNowpaymentsRoute,
   ApiPublicJobsScanMarketsRoute: ApiPublicJobsScanMarketsRoute,
   ApiPublicMt5PollRoute: ApiPublicMt5PollRoute,
