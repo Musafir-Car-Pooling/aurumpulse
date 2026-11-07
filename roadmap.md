@@ -16,4 +16,5 @@
 - [ ] Connect WhatsApp and implement/test sending, signed callbacks, delivery tracking and recovery — connection declined; approved sender/template and publishing required.- [x] 3-day free trial, Daily/Weekly/Monthly packages, signals locked after trial, manual payment review and crypto checkout.
 - [ ] Crypto payments live — waiting for the user's NOWPayments API key and IPN secret.
 - [x] Binance address added; admin can add/update manual methods.
-- [ ] Admin access for pp@gmail.com — waiting for that account to be signed up and email confirmed.
+- [x] Admin access for pp@gmail.com — account created on the server, email confirmed, admin role granted.
+- [x] Side menu and a sign-in option stay available when Premium mode is off.
