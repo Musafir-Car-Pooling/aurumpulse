@@ -11,6 +11,7 @@ import { getMarketBoard, getSignal, type SignalResult } from "@/lib/signal.funct
 import { PLANS, planIds } from "@/lib/plans";
 import { MARKETS, marketIds, price, type Market } from "@/lib/markets";
 import type { Scan } from "@/lib/market-data";
+import { getFreeBoard, getFreeSignal, getPremiumMode } from "@/lib/public.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -24,11 +25,22 @@ export const Route = createFileRoute("/")({
 const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 type Board = Awaited<ReturnType<typeof getMarketBoard>>;
 function Index() {
-  const run = useServerFn(getSignal), readBoard = useServerFn(getMarketBoard), readAccess = useServerFn(getMyAccess);
-  const { user, ready } = useAuth();
+  const runPaid = useServerFn(getSignal), readPaid = useServerFn(getMarketBoard), readAccess = useServerFn(getMyAccess);
+  const runFree = useServerFn(getFreeSignal), readFree = useServerFn(getFreeBoard), readMode = useServerFn(getPremiumMode);
+  const auth = useAuth();
+  const [premium,setPremium] = useState<boolean | null>(null);
+  useEffect(() => { readMode().then(m => setPremium(m.premium)).catch(() => setPremium(true)); },[readMode]);
+  const free = premium === false;
+  const user = free ? null : auth.user, ready = auth.ready && premium !== null;
+  const run = free ? runFree : runPaid, readBoard = free ? readFree : readPaid;
   const [access,setAccess] = useState<Awaited<ReturnType<typeof getMyAccess>> | null>(null);
   useEffect(() => { if (!user) { setAccess(null); return; } readAccess().then(setAccess).catch(() => setAccess(null)); },[user,readAccess]);
-  const allowed = access?.state.kind === 'trial' || access?.state.kind === 'premium';
+  const allowed = free || access?.state.kind === 'trial' || access?.state.kind === 'premium';
+  useEffect(() => {
+    if (!free || typeof Notification === 'undefined') return;
+    if (Notification.permission === 'granted') { notify.current = true; setNotifying(true); }
+    else if (Notification.permission === 'default' && !sessionStorage.getItem('ap-notif-asked')) setAsk(true);
+  },[free]);
   const [market,setMarket] = useState<Market>("XAUUSD");
   const [manual,setManual] = useState<Partial<Record<Market,Scan>>>({});
   const [board,setBoard] = useState<Board | null>(null);
@@ -90,7 +102,7 @@ function Index() {
     <div className="mx-auto max-w-xl">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1">{user && <AppMenu email={user.email ?? ''} isAdmin={!!access?.isAdmin} status={statusLabel(access?.state.kind, !!access?.isAdmin, (access?.state as {until?:string}|undefined)?.until)} />}<p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p></div>
-        {user && <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>}
+        {(user || free) && <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>}
       </div>
       <h1 className="mt-2 font-display text-5xl leading-none">AurumPulse</h1>
       {ready && !user && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">3 DAYS FREE</p><p className="mt-2 text-sm">Create an account to get live BUY/SELL signals for 5 markets. After the trial, pick a package:</p><div className="mt-4 grid grid-cols-3 gap-2">{planIds.map(id => <Link key={id} to="/packages" className="rounded-lg border border-gold/40 bg-card p-3 text-center hover:border-gold"><p className="text-xs text-muted-foreground">{PLANS[id].label}</p><p className="font-display text-3xl text-gold">${PLANS[id].price}</p><p className="text-[10px] text-muted-foreground">{PLANS[id].days} {PLANS[id].days === 1 ? "day" : "days"}</p></Link>)}</div><Button asChild className="btn-gold mt-4 w-full"><Link to="/auth">Start free trial</Link></Button></section>}

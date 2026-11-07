@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          premium_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          premium_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          premium_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       market_scans: {
         Row: {
           error: string | null
@@ -221,6 +239,7 @@ export type Database = {
         Returns: boolean
       }
       has_signal_access: { Args: { _user_id: string }; Returns: boolean }
+      premium_enabled: { Args: never; Returns: boolean }
       record_market_scan: {
         Args: {
           p_error?: string
