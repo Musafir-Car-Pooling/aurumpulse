@@ -12,6 +12,8 @@ import { PLANS, planIds } from "@/lib/plans";
 import { MARKETS, marketIds, price, type Market } from "@/lib/markets";
 import type { Scan } from "@/lib/market-data";
 import { TakeEntry } from "@/components/TakeEntry";
+import { BrandLogo } from "@/components/BrandLogo";
+import { InstallApp } from "@/components/InstallApp";
 import { getFreeBoard, getFreeSignal, getPremiumMode } from "@/lib/public.functions";
 
 export const Route = createFileRoute("/")({
@@ -105,7 +107,7 @@ function Index() {
         <div className="flex items-center gap-1">{user && <AppMenu email={user.email ?? ''} isAdmin={!!access?.isAdmin} status={statusLabel(access?.state.kind, !!access?.isAdmin, (access?.state as {until?:string}|undefined)?.until)} />}<p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p></div>
         {(user || free) && <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>}
       </div>
-      <h1 className="mt-2 font-display text-5xl leading-none">AurumPulse</h1>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2"><BrandLogo className="h-11 w-11" /><h1 className="font-display text-4xl leading-none sm:text-5xl">AurumPulse</h1></div><InstallApp /></div>
       {ready && !user && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">3 DAYS FREE</p><p className="mt-2 text-sm">Create an account to get live BUY/SELL signals for 5 markets. After the trial, pick a package:</p><div className="mt-4 grid grid-cols-3 gap-2">{planIds.map(id => <Link key={id} to="/packages" className="rounded-lg border border-gold/40 bg-card p-3 text-center hover:border-gold"><p className="text-xs text-muted-foreground">{PLANS[id].label}</p><p className="font-display text-3xl text-gold">${PLANS[id].price}</p><p className="text-[10px] text-muted-foreground">{PLANS[id].days} {PLANS[id].days === 1 ? "day" : "days"}</p></Link>)}</div><Button asChild className="btn-gold mt-4 w-full"><Link to="/auth">Start free trial</Link></Button></section>}
       {user && access && !allowed && <section className="card-glow mt-6 rounded-lg p-5"><p className="font-display text-3xl text-gold">TRIAL ENDED</p><p className="mt-2 text-sm">Your 3-day free trial has expired. Get a premium package to keep receiving signals.</p><div className="mt-4 grid grid-cols-3 gap-2">{planIds.map(id => <Link key={id} to="/packages" className="rounded-lg border border-gold/40 bg-card p-3 text-center hover:border-gold"><p className="text-xs text-muted-foreground">{PLANS[id].label}</p><p className="font-display text-3xl text-gold">${PLANS[id].price}</p><p className="text-[10px] text-muted-foreground">{PLANS[id].days} {PLANS[id].days === 1 ? "day" : "days"}</p></Link>)}</div><Button asChild className="btn-gold mt-4 w-full"><Link to="/packages">See packages — from $1</Link></Button></section>}
       {user && access && allowed && <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground"><span>{access.state.kind === 'trial' ? `Free trial · ends ${new Date(access.state.until).toLocaleDateString()}` : access.isAdmin ? 'Admin' : `Premium · until ${new Date((access.state as {until:string}).until).toLocaleDateString()}`}</span><Link to="/packages" className="text-gold underline">Packages</Link></div>}
