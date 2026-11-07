@@ -5,25 +5,30 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { AppMenu } from "@/components/AppMenu";
 
-const root = createRootRoute({ component: () => <Outlet /> });
-const tree = root.addChildren([
-  createRoute({ getParentRoute: () => root, path: "/", component: () => null }),
-  createRoute({ getParentRoute: () => root, path: "/auth", component: () => null }),
-  createRoute({ getParentRoute: () => root, path: "/packages", component: () => null }),
-  createRoute({ getParentRoute: () => root, path: "/mt5", component: () => null }),
-  createRoute({ getParentRoute: () => root, path: "/admin", component: () => null }),
-]);
+type MenuProps = React.ComponentProps<typeof AppMenu>;
 
-async function openMenu(props: React.ComponentProps<typeof AppMenu>) {
+// A two-page route tree is enough for the menu's links; the app's real routes
+// run loaders and server calls the menu test does not need.
+function menuTree(props: MenuProps) {
+  const root = createRootRoute({ component: () => <Outlet /> });
+  return root.addChildren([
+    createRoute({ getParentRoute: () => root, path: "/", component: () => <AppMenu {...props} /> }),
+    createRoute({ getParentRoute: () => root, path: "/auth", component: () => null }),
+    createRoute({ getParentRoute: () => root, path: "/packages", component: () => null }),
+    createRoute({ getParentRoute: () => root, path: "/mt5", component: () => null }),
+    createRoute({ getParentRoute: () => root, path: "/admin", component: () => null }),
+  ]);
+}
+
+async function openMenu(props: MenuProps) {
   const queryClient = new QueryClient();
   const router = createRouter({
-    routeTree: tree,
+    routeTree: menuTree(props),
     history: createMemoryHistory({ initialEntries: ["/"] }),
     context: { queryClient },
   });
   await router.load();
   render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>);
-  console.log("DBG matches", router.state.matches.length, "status", router.state.status, "html", document.body.innerHTML.slice(0, 400));
   fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
   await screen.findByText("AURUMPULSE");
 }
@@ -34,8 +39,7 @@ describe("side menu when premium is off", () => {
   it("offers sign in to a visitor who is not signed in", async () => {
     await openMenu({ status: "Free access", isAdmin: false, premium: false, signedIn: false });
     expect(screen.getByText("Not signed in")).toBeInTheDocument();
-    const link = screen.getByRole("link", { name: /Sign in or create account/i });
-    expect(link).toHaveAttribute("href", "/auth");
+    expect(screen.getByRole("link", { name: /Sign in or create account/i })).toHaveAttribute("href", "/auth");
     expect(screen.queryByRole("button", { name: /Sign out/i })).toBeNull();
   });
 
