@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, TrendingUp, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -45,7 +46,7 @@ function AuthPage() {
     <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-gold/20 blur-3xl" />
     <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col">
       <div className="flex items-center gap-3">
-        <div className="btn-gold flex h-12 w-12 items-center justify-center rounded-xl"><TrendingUp className="h-6 w-6" /></div>
+        <BrandLogo />
         <div><h1 className="font-display text-4xl leading-none">AURUMPULSE</h1><p className="text-xs tracking-widest text-gold">LIVE MARKET SIGNALS</p></div>
       </div>
       <div className="mt-10 flex-1">

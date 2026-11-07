@@ -4,6 +4,7 @@ import { Crown, LayoutDashboard, LogOut, Menu, Plug, Shield, Sparkles, UserRound
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
+import { BrandLogo } from "@/components/BrandLogo";
 
 type Props = { email: string; status: string; isAdmin: boolean; premium?: boolean };
 
@@ -25,7 +26,7 @@ export function AppMenu({ email, status, isAdmin, premium = true }: Props) {
     <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Open menu"><Menu /></Button></SheetTrigger>
     <SheetContent side="left" className="flex w-80 flex-col border-gold/20 bg-background p-0">
       <SheetHeader className="border-b border-border p-6 text-left">
-        <SheetTitle className="font-display text-3xl tracking-wide text-gold">AURUMPULSE</SheetTitle>
+        <div className="flex items-center gap-2"><BrandLogo className="h-10 w-10" /><SheetTitle className="font-display text-3xl text-gold">AURUMPULSE</SheetTitle></div>
         <div className="mt-4 flex items-center gap-3">
           <div className="btn-gold flex h-12 w-12 shrink-0 items-center justify-center rounded-full"><UserRound className="h-6 w-6" /></div>
           <div className="min-w-0">
