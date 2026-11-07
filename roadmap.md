@@ -1,5 +1,11 @@
 # Market alerts
 
+## Netlify launch
+- [ ] Configure Netlify deployment and document required external settings.
+- [ ] Add home-screen installation and browser install prompt (no offline caching).
+- [ ] Add a suitable logo, matching favicon and app icons.
+- [ ] Verify installation controls, metadata and mobile/desktop rendering.
+
 - [x] Add BTCUSD, EURUSD, GBPUSD, and USDJPY without changing the gold strategy.
 - [x] Add saved scanning, current-market timestamps, and stale-data protection; authenticated scanner verified in preview.
 - [x] Add BUY/SELL-only app alerts and duplicate suppression.
