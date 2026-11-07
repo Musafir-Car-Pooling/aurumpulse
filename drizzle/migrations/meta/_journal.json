@@ -36,6 +36,13 @@
       "when": 1794044979147,
       "tag": "0004_mt5_bridge",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794050438877,
+      "tag": "0005_mt5_auto_trade",
+      "breakpoints": true
     }
   ]
 }

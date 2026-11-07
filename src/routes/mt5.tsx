@@ -5,7 +5,8 @@ import { Copy, Download, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { AppMenu } from "@/components/AppMenu";
-import { createMt5Key, getMt5Link, listMt5Orders, revokeMt5Key } from "@/lib/mt5.functions";
+import { Switch } from "@/components/ui/switch";
+import { createMt5Key, getMt5Link, listMt5Orders, revokeMt5Key, setAutoTrade } from "@/lib/mt5.functions";
 
 export const Route = createFileRoute("/mt5")({
   head: () => ({ meta: [
@@ -22,7 +23,7 @@ const ago = (iso: string) => { const s = Math.round((Date.now() - new Date(iso).
 
 function Mt5Page() {
   const { user, ready } = useAuth();
-  const readLink = useServerFn(getMt5Link), create = useServerFn(createMt5Key), revoke = useServerFn(revokeMt5Key), list = useServerFn(listMt5Orders);
+  const readLink = useServerFn(getMt5Link), create = useServerFn(createMt5Key), revoke = useServerFn(revokeMt5Key), list = useServerFn(listMt5Orders), setAuto = useServerFn(setAutoTrade);
   const [link, setLink] = useState<Awaited<ReturnType<typeof getMt5Link>>>(null);
   const [orders, setOrders] = useState<Awaited<ReturnType<typeof listMt5Orders>>>([]);
   const [key, setKey] = useState(""), [msg, setMsg] = useState("");
@@ -47,10 +48,15 @@ function Mt5Page() {
             {link && <Button variant="outline" onClick={async () => { await revoke(); setKey(""); setMsg("Disconnected."); void load(); }}>Disconnect</Button>}
           </div>
         </section>
+        {link && <section className="card-glow flex items-center justify-between gap-4 rounded-xl p-5">
+          <div><p className="font-semibold">Auto trade</p>
+            <p className="text-xs text-muted-foreground">{link.auto_trade ? "On — every new BUY/SELL signal (all 5 pairs) is sent to MT5 automatically with SL, TP1 and TP2." : "Off — only signals where you tap \"Take entry now\" are traded."}</p></div>
+          <Switch aria-label="Auto trade" checked={!!link.auto_trade} onCheckedChange={async on => { try { await setAuto({ data: { on } }); setMsg(on ? "Auto trade is on." : "Auto trade is off."); void load(); } catch { setMsg("Could not change auto trade."); } }} />
+        </section>}
         <section className="rounded-xl border border-border bg-card p-5 text-sm leading-relaxed">
           <p className="font-semibold">Setup (one time)</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-            <li>Download the <span className="text-foreground">AurumPulse Bridge EA</span> from your files and copy it into MT5 → File → Open Data Folder → MQL5/Experts.</li>
+            <li>Download the <span className="text-foreground">AurumPulse Bridge EA v2</span> from your files and copy it into MT5 → File → Open Data Folder → MQL5/Experts.</li>
             <li>MT5 → Tools → Options → Expert Advisors → tick "Allow WebRequest" and add: <code className="break-all text-gold">{origin}</code></li>
             <li>Attach the EA to any chart, paste your connect key and this address into its settings, and enable Algo Trading.</li>
           </ol>
@@ -60,7 +66,7 @@ function Mt5Page() {
           <p className="p-4 font-semibold">Recent entries</p>
           {orders.length === 0 && <p className="p-4 text-sm text-muted-foreground">No entries yet.</p>}
           {orders.map(o => <div key={o.id} className="flex items-center justify-between gap-3 p-4 text-sm">
-            <span className="font-mono">{o.market} <span className={o.direction === "BUY" ? "text-bull" : "text-bear"}>{o.direction}</span> {o.lot}</span>
+            <span className="font-mono">{o.market} <span className={o.direction === "BUY" ? "text-bull" : "text-bear"}>{o.direction}</span> {o.lot} <span className="text-xs text-muted-foreground">{o.source === "auto" ? "Auto" : "Manual"}</span></span>
             <span className={`text-xs ${o.status === "executed" ? "text-bull" : o.status === "failed" || o.status === "expired" ? "text-bear" : "text-gold"}`}>{o.status}{o.price ? ` @ ${o.price}` : ""}{o.error ? ` · ${o.error}` : ""}</span>
           </div>)}
         </section>
