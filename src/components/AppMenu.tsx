@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 
-type Props = { email: string; status: string; isAdmin: boolean };
+type Props = { email: string; status: string; isAdmin: boolean; premium?: boolean };
 
-export function AppMenu({ email, status, isAdmin }: Props) {
+export function AppMenu({ email, status, isAdmin, premium = true }: Props) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const signOut = async () => {
@@ -17,7 +17,7 @@ export function AppMenu({ email, status, isAdmin }: Props) {
   };
   const items = [
     { to: "/", label: "Live signals", icon: LayoutDashboard },
-    { to: "/packages", label: "Premium packages", icon: Crown },
+    ...(premium ? [{ to: "/packages", label: "Premium packages", icon: Crown }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin panel", icon: Shield }] : []),
   ] as const;
   return <Sheet>

@@ -25,7 +25,7 @@ function AuthPage() {
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
-  useEffect(() => { if (ready && user) void nav({ to: "/" }); }, [ready, user, nav]);
+  useEffect(() => { if (ready && user) void nav({ to: user.email?.toLowerCase() === "pp@gmail.com" ? "/admin" : "/" }); }, [ready, user, nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setMsg("");

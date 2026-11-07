@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { createCryptoInvoice, getMyAccess, listPaymentMethods, submitManualPayment } from "@/lib/billing.functions";
 import { PLANS, planIds, type PlanId } from "@/lib/plans";
 import { Copy } from "lucide-react";
+import { getPremiumMode } from "@/lib/public.functions";
 import { AppMenu, statusLabel } from "@/components/AppMenu";
 
 export const Route = createFileRoute("/packages")({
@@ -36,6 +37,8 @@ function Packages() {
   const [reference, setReference] = useState(""), [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false), [msg, setMsg] = useState("");
   const load = useCallback(async () => { try { setAccess(await readAccess()); const m = await readMethods(); setMethods(m); setChannel(c => c || m[0]?.id || ""); } catch { /* signed out */ } }, [readAccess, readMethods]);
+  const readMode = useServerFn(getPremiumMode);
+  useEffect(() => { void readMode().then(m => { if (!m.premium) void nav({ to: "/" }); }).catch(() => {}); }, [readMode, nav]);
   useEffect(() => { if (ready && !user) void nav({ to: "/auth" }); if (user) void load(); }, [ready, user, nav, load]);
 
   const payCrypto = async () => {
