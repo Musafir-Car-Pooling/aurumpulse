@@ -19,7 +19,7 @@ type OrderRow = { id: string; market: string; direction: string; lot: number; si
 export function pollLine(o: OrderRow, withLevels: boolean) {
   const base = `${o.id}|${o.market}|${o.direction}|${o.lot}`;
   if (!withLevels) return base;
-  const s = (o.signal ?? {}) as Record<string, unknown>;
+  const s = (o.signal ?? {}) as { stopLoss?: unknown; tp1?: unknown; tp2?: unknown };
   const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
   return `${base}|${n(s.stopLoss)}|${n(s.tp1)}|${n(s.tp2)}`;
 }
