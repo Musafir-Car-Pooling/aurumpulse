@@ -21,6 +21,7 @@ async function openMenu(props: React.ComponentProps<typeof AppMenu>) {
     history: createMemoryHistory({ initialEntries: ["/"] }),
     context: { queryClient },
   });
+  await router.load();
   render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>);
   fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
   await screen.findByText("AURUMPULSE");
