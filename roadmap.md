@@ -1,10 +1,11 @@
 # Market alerts
 
 ## Netlify launch
-- [ ] Configure Netlify deployment and document required external settings.
-- [ ] Add home-screen installation and browser install prompt (no offline caching).
-- [ ] Add a suitable logo, matching favicon and app icons.
-- [ ] Verify installation controls, metadata and mobile/desktop rendering.
+- [x] Configure Netlify deployment and document required external settings.
+- [x] Add home-screen installation and browser install prompt (no offline caching).
+- [x] Add a suitable logo, matching favicon and app icons.
+- [x] Verify installation controls, metadata and mobile/desktop rendering; native install event simulated, four tests pass.
+- [ ] Verify Netlify production install and full application flows — live URL returns 404; redeployment and external-hosting backend decision required because managed privileged credentials are not exportable.
 
 - [x] Add BTCUSD, EURUSD, GBPUSD, and USDJPY without changing the gold strategy.
 - [x] Add saved scanning, current-market timestamps, and stale-data protection; authenticated scanner verified in preview.
