@@ -105,7 +105,7 @@ function Index() {
   return <main className="min-h-screen bg-background text-foreground px-5 py-10">
     <div className="mx-auto max-w-xl">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1">{(signedIn || free) && <AppMenu signedIn={signedIn} email={auth.user?.email ?? ''} isAdmin={!!access?.isAdmin} status={free ? (access?.isAdmin ? 'Admin' : 'Free access') : statusLabel(access?.state.kind, !!access?.isAdmin, (access?.state as {until?:string}|undefined)?.until)} />}<p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p></div>
+        <div className="flex items-center gap-1">{(signedIn || free) && <AppMenu signedIn={signedIn} premium={!free} email={auth.user?.email ?? ''} isAdmin={!!access?.isAdmin} status={free ? (access?.isAdmin ? 'Admin' : 'Free access') : statusLabel(access?.state.kind, !!access?.isAdmin, (access?.state as {until?:string}|undefined)?.until)} />}<p className="font-mono text-xs text-gold">{market} · {MARKETS[market].name}</p></div>
         {(user || free) && <Button variant="ghost" size="icon" title={notifying ? 'Disable device alerts' : 'Enable device alerts'} aria-label={notifying ? 'Disable device alerts' : 'Enable device alerts'} onClick={enableNotifications}>{notifying ? <Bell/> : <BellOff/>}</Button>}
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2"><BrandLogo className="h-11 w-11" /><h1 className="font-display text-4xl leading-none sm:text-5xl">AurumPulse</h1></div><InstallApp /></div>
