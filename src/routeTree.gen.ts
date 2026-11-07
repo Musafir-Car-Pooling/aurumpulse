@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as Mt5RouteImport } from './routes/mt5'
 import { Route as PackagesRouteImport } from './routes/packages'
 import { Route as ApiPublicNowpaymentsRouteImport } from './routes/api/public/nowpayments'
 import { Route as ApiPublicJobsScanMarketsRouteImport } from './routes/api/public/jobs/scan-markets'
@@ -31,6 +32,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Mt5Route = Mt5RouteImport.update({
+  id: '/mt5',
+  path: '/mt5',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PackagesRoute = PackagesRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/mt5': typeof Mt5Route
   '/packages': typeof PackagesRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/mt5': typeof Mt5Route
   '/packages': typeof PackagesRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/mt5': typeof Mt5Route
   '/packages': typeof PackagesRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/mt5'
     | '/packages'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/mt5'
     | '/packages'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/mt5'
     | '/packages'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  Mt5Route: typeof Mt5Route
   PackagesRoute: typeof PackagesRoute
   ApiPublicNowpaymentsRoute: typeof ApiPublicNowpaymentsRoute
   ApiPublicJobsScanMarketsRoute: typeof ApiPublicJobsScanMarketsRoute
@@ -156,6 +169,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mt5': {
+      id: '/mt5'
+      path: '/mt5'
+      fullPath: '/mt5'
+      preLoaderRoute: typeof Mt5RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packages': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  Mt5Route: Mt5Route,
   PackagesRoute: PackagesRoute,
   ApiPublicNowpaymentsRoute: ApiPublicNowpaymentsRoute,
   ApiPublicJobsScanMarketsRoute: ApiPublicJobsScanMarketsRoute,
