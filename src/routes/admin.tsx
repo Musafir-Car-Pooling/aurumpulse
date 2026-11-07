@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { AppMenu } from "@/components/AppMenu";
+import { adminSetPremium, getPremiumMode } from "@/lib/public.functions";
 import { adminDecidePayment, adminDeleteMethod, adminListPayments, adminListUsers, adminSaveMethod, listPaymentMethods } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/admin")({
@@ -31,6 +32,9 @@ function Admin() {
   const methodsFn = useServerFn(listPaymentMethods), save = useServerFn(adminSaveMethod), del = useServerFn(adminDeleteMethod);
   const [rows, setRows] = useState<Rows | null>(null), [us, setUs] = useState<Users>([]), [ms, setMs] = useState<Methods>([]);
   const [err, setErr] = useState(""), [form, setForm] = useState({ label: "", details: "" });
+  const readMode = useServerFn(getPremiumMode), setMode = useServerFn(adminSetPremium);
+  const [premium, setPremium] = useState<boolean | null>(null);
+  useEffect(() => { readMode().then(m => setPremium(m.premium)).catch(() => {}); }, [readMode]);
   const load = useCallback(async () => {
     try { const [r, u, m] = await Promise.all([list(), users(), methodsFn()]); setRows(r); setUs(u); setMs(m); setErr(""); }
     catch { setErr("Admin access only."); }
@@ -51,7 +55,13 @@ function Admin() {
           {[["Users", us.length], ["Premium", premium], ["Pending", pending]].map(([k, v]) => <div key={k} className="card-glow rounded-xl p-4"><p className="text-xs text-muted-foreground">{k}</p><p className="font-display text-4xl text-gold">{v}</p></div>)}
         </div>
         <Tabs defaultValue="payments" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3"><TabsTrigger value="payments">Payments</TabsTrigger><TabsTrigger value="users">Users</TabsTrigger><TabsTrigger value="methods">Methods</TabsTrigger></TabsList>
+          <TabsList className="grid w-full grid-cols-4"><TabsTrigger value="payments">Payments</TabsTrigger><TabsTrigger value="users">Users</TabsTrigger><TabsTrigger value="methods">Methods</TabsTrigger><TabsTrigger value="settings">Settings</TabsTrigger></TabsList>
+          <TabsContent value="settings" className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div><p className="font-semibold">Premium mode</p><p className="mt-1 text-xs text-muted-foreground">{premium === false ? "OFF — everyone sees free signals. No sign-up, login or packages." : "ON — users must sign up, get a 3-day trial, then buy a package."}</p></div>
+              <Switch checked={premium !== false} disabled={premium === null} onCheckedChange={async v => { setPremium(v); try { await setMode({ data: { premium: v } }); } catch { setPremium(!v); } }} aria-label="Premium mode" />
+            </div>
+          </TabsContent>
           <TabsContent value="payments" className="divide-y divide-border rounded-xl border border-border bg-card">
             {rows.length === 0 && <p className="p-4 text-sm text-muted-foreground">No payments yet.</p>}
             {rows.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
