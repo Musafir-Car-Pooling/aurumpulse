@@ -62,6 +62,27 @@ export type Database = {
         }
         Relationships: []
       }
+      mt5_links: {
+        Row: {
+          created_at: string
+          key_hash: string
+          last_seen: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          key_hash: string
+          last_seen?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          key_hash?: string
+          last_seen?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           active: boolean
@@ -164,6 +185,54 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_orders: {
+        Row: {
+          created_at: string
+          direction: string
+          done_at: string | null
+          error: string | null
+          id: string
+          lot: number
+          market: string
+          price: number | null
+          sent_at: string | null
+          signal: Json
+          status: string
+          ticket: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          done_at?: string | null
+          error?: string | null
+          id?: string
+          lot?: number
+          market: string
+          price?: number | null
+          sent_at?: string | null
+          signal: Json
+          status?: string
+          ticket?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          done_at?: string | null
+          error?: string | null
+          id?: string
+          lot?: number
+          market?: string
+          price?: number | null
+          sent_at?: string | null
+          signal?: Json
+          status?: string
+          ticket?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_access: {
         Row: {
           created_at: string
@@ -229,6 +298,16 @@ export type Database = {
           premium_until: string
           trial_ends_at: string
           user_id: string
+        }[]
+      }
+      claim_mt5_order: {
+        Args: { p_key_hash: string }
+        Returns: {
+          created_at: string
+          direction: string
+          id: string
+          lot: number
+          market: string
         }[]
       }
       has_role: {
