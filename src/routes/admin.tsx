@@ -33,7 +33,7 @@ function Admin() {
   const [rows, setRows] = useState<Rows | null>(null), [us, setUs] = useState<Users>([]), [ms, setMs] = useState<Methods>([]);
   const [err, setErr] = useState(""), [form, setForm] = useState({ label: "", details: "" });
   const readMode = useServerFn(getPremiumMode), setMode = useServerFn(adminSetPremium);
-  const [premium, setPremium] = useState<boolean | null>(null);
+  const [premiumMode, setPremium] = useState<boolean | null>(null);
   useEffect(() => { readMode().then(m => setPremium(m.premium)).catch(() => {}); }, [readMode]);
   const load = useCallback(async () => {
     try { const [r, u, m] = await Promise.all([list(), users(), methodsFn()]); setRows(r); setUs(u); setMs(m); setErr(""); }
@@ -58,8 +58,8 @@ function Admin() {
           <TabsList className="grid w-full grid-cols-4"><TabsTrigger value="payments">Payments</TabsTrigger><TabsTrigger value="users">Users</TabsTrigger><TabsTrigger value="methods">Methods</TabsTrigger><TabsTrigger value="settings">Settings</TabsTrigger></TabsList>
           <TabsContent value="settings" className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between gap-4">
-              <div><p className="font-semibold">Premium mode</p><p className="mt-1 text-xs text-muted-foreground">{premium === false ? "OFF — everyone sees free signals. No sign-up, login or packages." : "ON — users must sign up, get a 3-day trial, then buy a package."}</p></div>
-              <Switch checked={premium !== false} disabled={premium === null} onCheckedChange={async v => { setPremium(v); try { await setMode({ data: { premium: v } }); } catch { setPremium(!v); } }} aria-label="Premium mode" />
+              <div><p className="font-semibold">Premium mode</p><p className="mt-1 text-xs text-muted-foreground">{premiumMode === false ? "OFF — everyone sees free signals. No sign-up, login or packages." : "ON — users must sign up, get a 3-day trial, then buy a package."}</p></div>
+              <Switch checked={premiumMode !== false} disabled={premiumMode === null} onCheckedChange={async v => { setPremium(v); try { await setMode({ data: { premium: v } }); } catch { setPremium(!v); } }} aria-label="Premium mode" />
             </div>
           </TabsContent>
           <TabsContent value="payments" className="divide-y divide-border rounded-xl border border-border bg-card">
