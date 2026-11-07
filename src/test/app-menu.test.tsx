@@ -23,6 +23,7 @@ async function openMenu(props: React.ComponentProps<typeof AppMenu>) {
   });
   await router.load();
   render(<QueryClientProvider client={queryClient}><RouterProvider router={router} /></QueryClientProvider>);
+  console.log("DBG matches", router.state.matches.length, "status", router.state.status, "html", document.body.innerHTML.slice(0, 400));
   fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
   await screen.findByText("AURUMPULSE");
 }
