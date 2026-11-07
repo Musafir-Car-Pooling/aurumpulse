@@ -37,6 +37,13 @@ function AuthPage() {
     if (error) setMsg(/weak|easy to guess|pwned/i.test(error.message) ? "This password is too common. Use a stronger one (8+ characters with letters, numbers and a symbol)." : /already registered/i.test(error.message) ? "This email already has an account — tap Sign in below." : /not confirmed/i.test(error.message) ? "Please confirm your email first (check inbox/spam), then sign in." : error.message);
     else if (mode === "up") setMsg("Check your email to confirm your account, then sign in.");
   };
+  const forgot = async () => {
+    if (!email) { setMsg("Enter your email address above first, then tap Forgot password."); return; }
+    setBusy(true); setMsg("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    setBusy(false);
+    setMsg(error ? error.message : "Password reset link sent — check your email (inbox/spam).");
+  };
   const google = async () => {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (r.error) setMsg("Google sign-in failed. Try again.");
@@ -63,6 +70,7 @@ function AuthPage() {
           <div className="relative"><Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input type={show ? "text" : "password"} required minLength={mode === "up" ? 8 : 1} placeholder={mode === "up" ? "Password (8+ characters)" : "Password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="Password" className="h-14 rounded-xl pl-12 pr-12 text-base" />
             <button type="button" onClick={() => setShow(!show)} aria-label={show ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-gold">{show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></div>
+          {mode === "in" && <div className="text-right"><button type="button" onClick={() => void forgot()} disabled={busy} className="text-sm text-gold hover:underline">Forgot password?</button></div>}
           <Button type="submit" disabled={busy} className="btn-gold h-14 w-full rounded-xl text-base font-semibold">{busy ? "Please wait…" : mode === "up" ? "Start free trial" : "Sign in"}</Button>
         </form>
         {msg && <p role="status" className="mt-4 rounded-xl border border-gold/40 bg-muted p-3 text-sm">{msg}</p>}
