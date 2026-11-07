@@ -29,6 +29,13 @@
       "when": 1794042975232,
       "tag": "0003_premium_toggle",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794044979147,
+      "tag": "0004_mt5_bridge",
+      "breakpoints": true
     }
   ]
 }
