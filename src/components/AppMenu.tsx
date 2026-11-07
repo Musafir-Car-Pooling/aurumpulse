@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Crown, LayoutDashboard, LogOut, Menu, Shield, Sparkles, UserRound } from "lucide-react";
+import { Crown, LayoutDashboard, LogOut, Menu, Plug, Shield, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ export function AppMenu({ email, status, isAdmin, premium = true }: Props) {
   const items = [
     { to: "/", label: "Live signals", icon: LayoutDashboard },
     ...(premium ? [{ to: "/packages", label: "Premium packages", icon: Crown }] : []),
+    ...(premium ? [{ to: "/mt5", label: "Connect MT5", icon: Plug }] : []),
     ...(isAdmin ? [{ to: "/admin", label: "Admin panel", icon: Shield }] : []),
   ] as const;
   return <Sheet>

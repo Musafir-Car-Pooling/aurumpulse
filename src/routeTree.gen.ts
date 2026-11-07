@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PackagesRouteImport } from './routes/packages'
 import { Route as ApiPublicNowpaymentsRouteImport } from './routes/api/public/nowpayments'
 import { Route as ApiPublicJobsScanMarketsRouteImport } from './routes/api/public/jobs/scan-markets'
+import { Route as ApiPublicMt5PollRouteImport } from './routes/api/public/mt5/poll'
+import { Route as ApiPublicMt5ReportRouteImport } from './routes/api/public/mt5/report'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,6 +49,16 @@ const ApiPublicJobsScanMarketsRoute =
     path: '/api/public/jobs/scan-markets',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMt5PollRoute = ApiPublicMt5PollRouteImport.update({
+  id: '/api/public/mt5/poll',
+  path: '/api/public/mt5/poll',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMt5ReportRoute = ApiPublicMt5ReportRouteImport.update({
+  id: '/api/public/mt5/report',
+  path: '/api/public/mt5/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -55,6 +67,8 @@ export interface FileRoutesByFullPath {
   '/packages': typeof PackagesRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
+  '/api/public/mt5/poll': typeof ApiPublicMt5PollRoute
+  '/api/public/mt5/report': typeof ApiPublicMt5ReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -63,6 +77,8 @@ export interface FileRoutesByTo {
   '/packages': typeof PackagesRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
+  '/api/public/mt5/poll': typeof ApiPublicMt5PollRoute
+  '/api/public/mt5/report': typeof ApiPublicMt5ReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -72,6 +88,8 @@ export interface FileRoutesById {
   '/packages': typeof PackagesRoute
   '/api/public/nowpayments': typeof ApiPublicNowpaymentsRoute
   '/api/public/jobs/scan-markets': typeof ApiPublicJobsScanMarketsRoute
+  '/api/public/mt5/poll': typeof ApiPublicMt5PollRoute
+  '/api/public/mt5/report': typeof ApiPublicMt5ReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -82,6 +100,8 @@ export interface FileRouteTypes {
     | '/packages'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
+    | '/api/public/mt5/poll'
+    | '/api/public/mt5/report'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -90,6 +110,8 @@ export interface FileRouteTypes {
     | '/packages'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
+    | '/api/public/mt5/poll'
+    | '/api/public/mt5/report'
   id:
     | '__root__'
     | '/'
@@ -98,6 +120,8 @@ export interface FileRouteTypes {
     | '/packages'
     | '/api/public/nowpayments'
     | '/api/public/jobs/scan-markets'
+    | '/api/public/mt5/poll'
+    | '/api/public/mt5/report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -107,6 +131,8 @@ export interface RootRouteChildren {
   PackagesRoute: typeof PackagesRoute
   ApiPublicNowpaymentsRoute: typeof ApiPublicNowpaymentsRoute
   ApiPublicJobsScanMarketsRoute: typeof ApiPublicJobsScanMarketsRoute
+  ApiPublicMt5PollRoute: typeof ApiPublicMt5PollRoute
+  ApiPublicMt5ReportRoute: typeof ApiPublicMt5ReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -153,6 +179,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsScanMarketsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mt5/poll': {
+      id: '/api/public/mt5/poll'
+      path: '/api/public/mt5/poll'
+      fullPath: '/api/public/mt5/poll'
+      preLoaderRoute: typeof ApiPublicMt5PollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mt5/report': {
+      id: '/api/public/mt5/report'
+      path: '/api/public/mt5/report'
+      fullPath: '/api/public/mt5/report'
+      preLoaderRoute: typeof ApiPublicMt5ReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -163,6 +203,8 @@ const rootRouteChildren: RootRouteChildren = {
   PackagesRoute: PackagesRoute,
   ApiPublicNowpaymentsRoute: ApiPublicNowpaymentsRoute,
   ApiPublicJobsScanMarketsRoute: ApiPublicJobsScanMarketsRoute,
+  ApiPublicMt5PollRoute: ApiPublicMt5PollRoute,
+  ApiPublicMt5ReportRoute: ApiPublicMt5ReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -11,6 +11,7 @@ import { getMarketBoard, getSignal, type SignalResult } from "@/lib/signal.funct
 import { PLANS, planIds } from "@/lib/plans";
 import { MARKETS, marketIds, price, type Market } from "@/lib/markets";
 import type { Scan } from "@/lib/market-data";
+import { TakeEntry } from "@/components/TakeEntry";
 import { getFreeBoard, getFreeSignal, getPremiumMode } from "@/lib/public.functions";
 
 export const Route = createFileRoute("/")({
@@ -130,6 +131,7 @@ function Index() {
         {s.direction !== 'WAIT' && !stale && !expired && <div className="grid grid-cols-2 gap-3">{[
           {name:'Entry',value:s.entry,color:''},{name:'Stop loss',value:s.stopLoss,color:'text-bear'},{name:'Target 1',value:s.tp1,color:'text-bull'},{name:'Target 2',value:s.tp2,color:'text-bull'},
         ].map(item => <div key={item.name} className="rounded-lg border border-border bg-card p-4"><p className="text-xs text-muted-foreground">{item.name}</p><p className={`mt-1 break-words font-mono text-lg ${item.color}`}>{price(market,item.value)}</p></div>)}</div>}
+        {user && !free && s.direction !== 'WAIT' && !stale && !expired && <TakeEntry market={market} direction={s.direction as 'BUY' | 'SELL'} />}
         <div className="grid grid-cols-2 gap-3">{[{name:'Support (32 candles)',value:s.support},{name:'Resistance (32 candles)',value:s.resistance}].map(item => <div key={item.name} className="rounded-lg border border-border bg-card p-4"><p className="text-xs text-muted-foreground">{item.name}</p><p className="mt-1 font-mono text-lg">{price(market,item.value)}</p></div>)}</div>
         <div className="divide-y divide-border rounded-lg border border-border bg-card">{s.indicators.map(i => <div key={i.name} className="flex flex-wrap justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm"><span className="text-muted-foreground">{i.name}</span><span className={`font-mono ${i.bias==='bull' ? 'text-bull' : i.bias==='bear' ? 'text-bear' : ''}`}>{i.value}</span></div>)}</div>
       </section>}
