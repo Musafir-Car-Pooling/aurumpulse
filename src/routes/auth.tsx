@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
 import { BrandLogo } from "@/components/BrandLogo";
+import { getPremiumMode } from "@/lib/public.functions";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, TrendingUp, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -26,6 +28,9 @@ function AuthPage() {
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [msg, setMsg] = useState(""), [busy, setBusy] = useState(false);
+  const readMode = useServerFn(getPremiumMode);
+  const [premium, setPremium] = useState(true);
+  useEffect(() => { readMode().then(m => setPremium(m.premium)).catch(() => setPremium(true)); }, [readMode]);
   useEffect(() => { if (ready && user) void nav({ to: user.email?.toLowerCase() === "pp@gmail.com" ? "/admin" : "/" }); }, [ready, user, nav]);
 
   const submit = async (e: React.FormEvent) => {
@@ -60,8 +65,8 @@ function AuthPage() {
         <div className="grid grid-cols-2 rounded-xl bg-muted p-1 text-sm">
           {(["up", "in"] as const).map(m => <button key={m} type="button" onClick={() => { setMode(m); setMsg(""); }} className={`h-10 rounded-lg font-medium transition ${mode === m ? "btn-gold" : "text-muted-foreground"}`}>{m === "up" ? "Sign up" : "Sign in"}</button>)}
         </div>
-        <h2 className="mt-6 text-2xl font-semibold">{mode === "up" ? "Start your free trial" : "Welcome back"}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{mode === "up" ? "3 days of free BUY/SELL signals on 5 markets." : "Sign in to see your live signals."}</p>
+        <h2 className="mt-6 text-2xl font-semibold">{mode === "up" ? (premium ? "Start your free trial" : "Create your account") : "Welcome back"}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{mode === "up" ? (premium ? "3 days of free BUY/SELL signals on 5 markets." : "Save your access and market alerts.") : "Sign in to see your live signals."}</p>
         <Button variant="outline" className="mt-6 h-14 w-full rounded-xl text-base" onClick={google}>Continue with Google</Button>
         <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />OR<span className="h-px flex-1 bg-border" /></div>
         <form onSubmit={submit} className="space-y-4">
@@ -71,7 +76,7 @@ function AuthPage() {
             <Input type={show ? "text" : "password"} required minLength={mode === "up" ? 8 : 1} placeholder={mode === "up" ? "Password (8+ characters)" : "Password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="Password" className="h-14 rounded-xl pl-12 pr-12 text-base" />
             <button type="button" onClick={() => setShow(!show)} aria-label={show ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-gold">{show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></div>
           {mode === "in" && <div className="text-right"><button type="button" onClick={() => void forgot()} disabled={busy} className="text-sm text-gold hover:underline">Forgot password?</button></div>}
-          <Button type="submit" disabled={busy} className="btn-gold h-14 w-full rounded-xl text-base font-semibold">{busy ? "Please wait…" : mode === "up" ? "Start free trial" : "Sign in"}</Button>
+          <Button type="submit" disabled={busy} className="btn-gold h-14 w-full rounded-xl text-base font-semibold">{busy ? "Please wait…" : mode === "up" ? (premium ? "Start free trial" : "Create account") : "Sign in"}</Button>
         </form>
         {msg && <p role="status" className="mt-4 rounded-xl border border-gold/40 bg-muted p-3 text-sm">{msg}</p>}
       </div>
