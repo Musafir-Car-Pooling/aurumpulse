@@ -1,14 +1,18 @@
-# Welcome to your Lovable project
+# Aurumpulse
+
+Create a live real-time gold xauusd signal and technical analysis provider , once i press the button signal now that time check the market and provide the signal of that time or for next hour or during an hour.
 
 This project was built with [Lovable](https://lovable.dev).
 
+**Live app**: https://aurumpulse.lovable.app
+
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/c8c090ea-6d76-47eb-84d5-e821be6528e6).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +24,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
