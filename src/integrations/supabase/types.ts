@@ -64,18 +64,21 @@ export type Database = {
       }
       mt5_links: {
         Row: {
+          auto_trade: boolean
           created_at: string
           key_hash: string
           last_seen: string | null
           user_id: string
         }
         Insert: {
+          auto_trade?: boolean
           created_at?: string
           key_hash: string
           last_seen?: string | null
           user_id: string
         }
         Update: {
+          auto_trade?: boolean
           created_at?: string
           key_hash?: string
           last_seen?: string | null
@@ -197,6 +200,7 @@ export type Database = {
           price: number | null
           sent_at: string | null
           signal: Json
+          source: string
           status: string
           ticket: string | null
           user_id: string
@@ -212,6 +216,7 @@ export type Database = {
           price?: number | null
           sent_at?: string | null
           signal: Json
+          source?: string
           status?: string
           ticket?: string | null
           user_id: string
@@ -227,6 +232,7 @@ export type Database = {
           price?: number | null
           sent_at?: string | null
           signal?: Json
+          source?: string
           status?: string
           ticket?: string | null
           user_id?: string
@@ -310,6 +316,16 @@ export type Database = {
           market: string
         }[]
       }
+      claim_mt5_order_v2: {
+        Args: { p_key_hash: string }
+        Returns: {
+          direction: string
+          id: string
+          lot: number
+          market: string
+          signal: Json
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -319,6 +335,10 @@ export type Database = {
       }
       has_signal_access: { Args: { _user_id: string }; Returns: boolean }
       premium_enabled: { Args: never; Returns: boolean }
+      queue_auto_orders: {
+        Args: { p_direction: string; p_market: string; p_signal: Json }
+        Returns: number
+      }
       record_market_scan: {
         Args: {
           p_error?: string
